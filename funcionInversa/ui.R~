@@ -9,7 +9,7 @@ library(shiny)
 
 shinyUI(fluidPage(
 
-  titlePanel("Función Inversa"),
+  titlePanel("Histograma Distribución exponencial"),
 
   sidebarLayout( sidebarPanel(sliderInput("simulaciones", "Número de simulaciones", min = 500, max = 1000, value = 500),
   numericInput("lambda", "Parámetro lambda", value = .5),
