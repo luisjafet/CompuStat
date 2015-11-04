@@ -12,10 +12,13 @@ data(iris)
 # sigma ~ Gamma(rate=5, shape=1)  
 prior.mean <- function(x) dnorm(x, 3, .2)
 prior.sd <- function(x) dgamma(x, 5, 40)
-plot(prior.mean, col="darkblue", xlim=c(-5,18), lwd="2", main="Prior for mean", ylab="density")
-plot(prior.sd , col="darkred", xlim=c(0,1), lwd="2", main="Prior for standard deviation", ylab="density")
-# Here the wide variance in the mean reflects the uncertainty.
-# For stupidity reason suppose independent.
+
+
+prior.b0 <- function(x) dnorm(x, 3, .2)
+prior.b1 <- function(x) dnorm(x, 3, .2)
+prior.b2 <- function(x) dnorm(x, 3, .2)
+prior.b3 <- function(x) dnorm(x, 3, .2)
+
 
 # OUR DATA WILL BE IN MATRIX FORM!!! MANDATORY!!!! IF YOU DON'T LIKE IT
 # YOU CAN USE A WRAPPER FUNCTION IN R THAT CALLS THE C FUNCTIONS AND TRANSFORMS
