@@ -8,14 +8,16 @@
 library(shiny)
 
 shinyUI(fluidPage(
-
+  
+  # Application title
   titlePanel("Box Muller"),
+  
   sidebarLayout(
     sidebarPanel(
-      sliderInput("bins", "Tamaño",  min = 100, max = 100000, value = 1000)
+      sliderInput("bins", "tamaño:",  min = 1, max = 100000, value = 1000)
     ),
     mainPanel(
-      plotOutput("distPlot")
+      plotOutput("plot")
     )
   )
 ))
