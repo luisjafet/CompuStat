@@ -1,7 +1,15 @@
 #include <Rcpp.h>
-
 using namespace Rcpp;
-     
+
+// [[Rcpp::export]]
+double lkh(NumericVector X, NumericVector theta){
+  int m=X.size();
+  double lkh=0;
+  for (int i=0; i<m; i++){
+    lkh += -.5*(X[i]-theta[0])*(X[i]-theta[0])/theta[1]-log(theta[1]);
+  }
+  return lkh;
+}      
 
 // [[Rcpp::export]]
 List MHBayes(int nsim, NumericVector theta0, Function objdens, Function proposal, NumericMatrix data){
@@ -39,4 +47,3 @@ List MHBayes(int nsim, NumericVector theta0, Function objdens, Function proposal
   }
   return List::create(Named("theta")  = theta, Named("rejections")  = rejections);
 }
-
