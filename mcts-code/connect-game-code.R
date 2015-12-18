@@ -236,7 +236,7 @@ matcher <- function(winner, vec){
 # Imprime correctamente el tablero (al revez) 
 print.board <-function(board){
   board2 <- apply(board, 2, rev)
-  #print(board2)
+  print(board2)
   return (board2)
 }
 

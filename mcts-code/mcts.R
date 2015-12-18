@@ -1,63 +1,3 @@
-#
-#connect4ai.R
-#
-#functions included: 
-#	
-#	main AI functions:
-#	
-#		AI.move(board,player,winval,Nsim=10,bias=1.2,think.out.loud=TRUE,weight=TRUE)
-#		-- AI wrapper function to return a column to move to
-#		
-#		identifyNextStates(board,player)
-#		-- identify the valid moves for a given player
-#		
-#		evaluateNextStates(choices,parent,board,player,winval,Nsims=10,think.out.loud,weight)
-#		-- evaulate the states to make a choice
-#		
-#		explore.tree(start.state,player,board,winval)
-#		-- explore the tree by running random simulations
-#		
-#		update.blr(sim.big)
-#		-- update the "tree" with the new results of random simulations
-#		
-#		identifyMoveProps(player,choices)
-#		-- identify how good each move is
-#
-#		UCT(props,UCB,think.out.loud,weight=TRUE)
-#		-- help pick the next state based on confidence bounds and randomness
-#
-#			
-#	helper functions:
-#	
-#		stateID(board) 
-#		-- return the base10 value for the board
-#		
-#		displayGame(visited.states,board)
-#		-- display all boards in a game from start to finish
-#		
-#		convertToDecimal(base3state)
-#		-- convert a base3 number to base10
-#		
-#		convertToTrinary(state,board)
-#		-- convert a base10 number to base3
-#		
-#		toBoard(state,some.board)
-#		-- convert a state to a board
-#
-#		findState(state)
-#		-- identify if a given state is in the tree
-#
-#		stateToColumn(state,parent,board)
-#		-- return the column that is different between two boards
-#	
-#
-#	deprecated? functions:
-#		
-#		createStateFile(board)
-#		saveStateFile(state)
-#
-#
-
 branch.leaf.relationships <- list()
 
 AI.move <- function(board, player, winval, Nsim=10,bias=1.2,weight=TRUE){
@@ -79,27 +19,22 @@ stateToColumn <- function(state,parent,board){
 	old.board <- toBoard(state=parent,some.board=board)
 	new.board[which(is.na(new.board))] <- -66
 	old.board[which(is.na(old.board))] <- -66
-	#print(old.board)
-	#print(new.board)
 	for (i in 1:ncol(new.board)){
 		col.equal <- sum(!(new.board[,i]==old.board[,i])) 
-		# should be 0 if all equal
 		if (col.equal != 0)
-			return(i) # found the column
+			return(i)
 		}
 	}
 	
 stateID <- function(board){
 	temp.state <- as.vector(board)
-	#if (is.null(temp.state)) print(is.null(temp.state))
 	temp.state[which(is.na(temp.state))] <- 2
 	state <- convertToDecimal(temp.state)
 	return(state)
 	}
 	
 convertToDecimal <- function(base3state){
-	# convert base 3 number to base 10
-	base3state <- base3state[length(base3state):1] # wrote the code backward below
+	base3state <- base3state[length(base3state):1]
 	temp <- 0
 	for (i in 1:length(base3state)){
 		temp <- temp + base3state[i]*(3^(i-1))
@@ -120,7 +55,7 @@ identifyNextStates <- function(board,player){
 			valid.next.board[[i]] <- temp$board
 			}
 		}
-	valid.next.nodes <- c() # if length==0, then we're at an end point... I think. 
+	valid.next.nodes <- c()
 	if (length(valid.next.board) > 0){
 		for (i in 1:length(valid.next.board)){
 			if (!is.null(valid.next.board[[i]])){
@@ -131,52 +66,34 @@ identifyNextStates <- function(board,player){
 	return(na.omit(valid.next.nodes))
 	}
 
-# this function should return a state that we should pick
-# another function will convert the state to a move (column)
+
 evaluateNextStates <- function( choices, parent, board,
-#								tree,
-#								tree.winningChildren,
-#								tree.parentVisits,
 								player,
 								winval,
 								Nsims=10,
 								weight){
-	# first we figure out which choices/nodes are already in the BLR
-	# then we explore the remaining choices and update the BLR
-	# finally we make a decision
-	
-	# but first, let's check to see if any of these choices are a win condition for us
-	# if they are, let's just take it w.p. 1
-	
-	#if (win.check){
 	winning.board <- c()
 	for (i in 1:length(choices)){
 		win <- checkWinner(toBoard(choices[i],board),winval=winval,player=player)
 		if (win) winning.board <- choices[i]
 		}
 	if (!is.null(winning.board)) {
-		#print("Deterministic winning move")
-		return(winning.board) # hey, we won!
+		return(winning.board)
 		}
 	
 	
-	##### BEGIN EXPERIMENTAL BLOCKING CODE
-	
+
 	block.board <- c()
 	opponent <- (player+1)%%2
 	opponent.moves <- identifyNextStates(board=board,player=opponent)
-	##print(opponent.moves)
 	for (i in 1:length(opponent.moves)){
 		block <- checkWinner(toBoard(opponent.moves[i],board),winval=winval,player=opponent)
 		if (block) {
-			##print("we must block")
 			block.board <- choices[i] 
 			}
-		 ##we need to end up playing in the SAME COLUMN 
-		 ##that opponent would play here, but NOT this board
+
 		} 
 	if (!is.null(block.board)){
-		##print("opponent will win unless we block")
 		column <- stateToColumn(block.board,parent,board)
 		true.block.board <- addMove(board=toBoard(parent,board),column=column,player=player)
 		block.state <- stateID(true.block.board$board)
@@ -185,7 +102,7 @@ evaluateNextStates <- function( choices, parent, board,
 	
 	toExplore <- c()
 	for (i in 1:length(choices)){
-		if (!findState(choices[i])){ # haven't been to the state before...
+		if (!findState(choices[i])){ 
 			toExplore[i] <- choices[i]
 			}
 		}
@@ -194,8 +111,7 @@ evaluateNextStates <- function( choices, parent, board,
 		toExplore <- na.omit(toExplore)
 		for(i in 1:length(toExplore)){
 			simulated.game <- list()
-			for (jj in 1:Nsims){ # simulating a bunch of games
-				#print(paste("Current sim:",jj))
+			for (jj in 1:Nsims){ 
 				simulated.game[[jj+(Nsims*(i-1))]] <- explore.tree(start.state=toExplore[i],player=player,board=board,winval=winval)
 				}
 			update.blr(simulated.game);
